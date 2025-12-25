@@ -529,7 +529,6 @@ elif menu == "学习进度":
             "挑战难题 ×"
         ]
         
-<<<<<<< Updated upstream
         suggestions = {
             "优势保持": ["计算能力较强，保持每日计算练习"],
             "重点突破": [
@@ -547,26 +546,3 @@ elif menu == "学习进度":
                 for item in items:
                     st.write(f"• {item}")
     if __name__ == "__main__": main()
-=======
-        for ach in achievements:
-            st.write(f"- {ach}")
-
-# ================== 页脚 ==================
-st.markdown("---")
-st.markdown("""
-<div style='text-align: center'>
-    <p>小学六年级数学总复习系统 • 帮助同学们系统复习数学知识</p>
-    <p>遇到问题？点击右上角"?"获取帮助</p>
-</div>
-""", unsafe_allow_html=True)
-
-# ================== 部署说明（不会被显示） ==================
-"""
-部署说明：
-1. 这个应用包含了完整的六年级数学复习功能
-2. 依赖包已在requirements.txt中
-3. 应用已配置为宽屏模式，适配各种设备
-4. 使用了session_state来保持用户状态
-"""
-
->>>>>>> Stashed changes
