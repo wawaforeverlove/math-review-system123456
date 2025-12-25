@@ -1,3 +1,12 @@
+import traceback
+import streamlit as st
+
+try:
+    # 你的原有代码
+except Exception as e:
+    st.error(f"An error occurred: {e}")
+    st.code(traceback.format_exc())
+
 # grade_six_main.py
 def main():
     st.set_page_config(page_title="小学六年级数学总复习系统", layout="wide")
