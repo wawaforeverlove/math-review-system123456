@@ -1,6 +1,5 @@
 import traceback
 import streamlit as st
-try:
 except Exception as e:
     st.error(f"An error occurred: {e}")
     st.code(traceback.format_exc())
