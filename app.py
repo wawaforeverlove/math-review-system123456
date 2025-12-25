@@ -1,11 +1,15 @@
-<<<<<<< Updated upstream
 import hashlib
 import sys
 import os
 import traceback
 import streamlit as st
 import json, pandas as pd, plotly.graph_objects as go
-
+import streamlit as st
+import pandas as pd
+import numpy as np
+import json
+from typing import Dict, List, Optional
+import random
 
 # 在代码最开头添加一个“验身”标记
 st.markdown("""
@@ -56,7 +60,7 @@ def main():
         "立体图形": ["GG2"],
         "行程问题": ["CA2"],
         "统计图表": ["SP1"]
-=======
+
 """
 小学六年级数学总复习知识图谱系统
 功能：
@@ -66,12 +70,7 @@ def main():
 4. 错题本功能
 """
 
-import streamlit as st
-import pandas as pd
-import numpy as np
-import json
-from typing import Dict, List, Optional
-import random
+
 
 # 设置页面配置（必须放在最前面）
 st.set_page_config(
