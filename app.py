@@ -1,9 +1,22 @@
+import sys
+import os
 import traceback
 import streamlit as st
+
+# 显示基本信息
+st.write(f"Python 版本: {sys.version}")
+st.write(f"工作目录: {os.getcwd()}")
+
+try:
+    # 这是实际执行的代码，必须有缩进
+    st.title("数学复习系统测试")
+    st.write("应用启动成功！")
+    st.write(f"Streamlit 版本: {st.__version__}")
 except Exception as e:
-    st.error(f"An error occurred: {e}")
+    st.error(f"应用错误: {e}")
     st.code(traceback.format_exc())
-    
+
+
 # grade_six_main.py
 def main():
     st.set_page_config(page_title="小学六年级数学总复习系统", layout="wide")
