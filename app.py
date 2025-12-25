@@ -1,20 +1,20 @@
+import hashlib
 import sys
 import os
 import traceback
 import streamlit as st
 
+# 在代码最开头添加一个“验身”标记
+st.markdown("""
+<div style='background-color: #e6f7ff; padding: 10px; border-radius: 5px; border-left: 5px solid #1890ff;'>
+    <b>应用指纹标识:</b> <code>MATH_REVIEW_FULL_VERSION_v2</code> | 如果看到此行，说明完整代码已加载。
+</div>
+""", unsafe_allow_html=True)
+
+
 # 显示基本信息
 st.write(f"Python 版本: {sys.version}")
 st.write(f"工作目录: {os.getcwd()}")
-
-try:
-    # 这是实际执行的代码，必须有缩进
-    st.title("数学复习系统测试")
-    st.write("应用启动成功！")
-    st.write(f"Streamlit 版本: {st.__version__}")
-except Exception as e:
-    st.error(f"应用错误: {e}")
-    st.code(traceback.format_exc())
 
 
 # grade_six_main.py
