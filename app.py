@@ -3,6 +3,8 @@ import sys
 import os
 import traceback
 import streamlit as st
+import json, pandas as pd, plotly.graph_objects as go
+
 
 # 在代码最开头添加一个“验身”标记
 st.markdown("""
@@ -324,3 +326,4 @@ def main():
             with st.expander(f"**{category}**"):
                 for item in items:
                     st.write(f"• {item}")
+    if __name__ == "__main__": main()
