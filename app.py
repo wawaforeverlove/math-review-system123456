@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import hashlib
 import sys
 import os
@@ -55,261 +56,480 @@ def main():
         "立体图形": ["GG2"],
         "行程问题": ["CA2"],
         "统计图表": ["SP1"]
+=======
+"""
+小学六年级数学总复习知识图谱系统
+功能：
+1. 展示知识图谱（树状结构）
+2. 知识点详细讲解
+3. 练习题生成
+4. 错题本功能
+"""
+
+import streamlit as st
+import pandas as pd
+import numpy as np
+import json
+from typing import Dict, List, Optional
+import random
+
+# 设置页面配置（必须放在最前面）
+st.set_page_config(
+    page_title="小学六年级数学总复习系统",
+    page_icon="📚",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# ================== 知识点数据 ==================
+KNOWLEDGE_GRAPH = {
+    "六年级数学总复习": {
+        "数与代数": {
+            "分数": {
+                "分数的意义与性质": ["分数的意义", "分数单位", "分数的基本性质"],
+                "分数的运算": ["同分母分数加减", "异分母分数加减", "分数乘除法"],
+                "分数应用题": ["求一个数的几分之几", "已知一个数的几分之几求这个数"]
+            },
+            "小数": {
+                "小数的意义与性质": ["小数的意义", "小数的基本性质", "小数点的移动"],
+                "小数的运算": ["小数加减法", "小数乘除法"],
+                "小数应用题": ["购物问题", "测量问题"]
+            },
+            "百分数": {
+                "百分数的意义": ["百分数的读写", "百分数与小数分数的互化"],
+                "百分数应用题": ["求百分率", "求一个数的百分之几", "折扣与税率"]
+            },
+            "比和比例": {
+                "比的意义和性质": ["比的意义", "比的基本性质", "化简比"],
+                "比例的意义和性质": ["比例的意义", "比例的基本性质"],
+                "正比例和反比例": ["正比例关系", "反比例关系"]
+            }
+        },
+        "图形与几何": {
+            "平面图形": {
+                "周长与面积": ["长方形和正方形的周长面积", "三角形、平行四边形、梯形的面积", "圆的周长和面积"],
+                "图形的变换": ["平移、旋转、对称", "图形的放大与缩小"]
+            },
+            "立体图形": {
+                "表面积与体积": ["长方体和正方体的表面积体积", "圆柱的表面积体积", "圆锥的体积"],
+                "视图与展开图": ["三视图", "立体图形的展开图"]
+            },
+            "图形的位置与运动": ["位置与方向", "图形的平移与旋转", "轴对称图形"]
+        },
+        "统计与概率": {
+            "统计": ["统计表", "条形统计图", "折线统计图", "扇形统计图"],
+            "概率": ["可能性", "简单的概率计算"]
+        },
+        "解决问题": {
+            "数量关系": ["归一问题", "归总问题", "和差倍问题", "行程问题"],
+            "策略与方法": ["列表法", "画图法", "假设法", "方程法"]
+        }
+>>>>>>> Stashed changes
     }
+}
+
+# ================== 知识点详细内容 ==================
+KNOWLEDGE_CONTENT = {
+    "分数的意义": {
+        "讲解": """
+        ## 分数的意义
+        
+        分数表示一个整体被平均分成若干份，表示这样的一份或几份的数。
+        
+        ### 关键概念：
+        1. **整体**：被分的对象
+        2. **平均分**：每份大小相等
+        3. **分母**：表示平均分的份数
+        4. **分子**：表示取的份数
+        
+        ### 例子：
+        - 把一个月饼平均分成4份，每份是1/4
+        - 一个班级有40人，男生有23人，男生占全班的23/40
+        """,
+        "例题": """
+        **例题**：小明有12颗糖，他吃了1/3，吃了多少颗？
+        
+        **解答**：
+        12 × 1/3 = 4（颗）
+        答：吃了4颗糖。
+        """,
+        "练习题": ["3/5表示的意义是什么？", "把20个苹果平均分成5份，每份是几分之几？", "1/4 + 2/4 = ?"]
+    },
+    "圆的周长和面积": {
+        "讲解": """
+        ## 圆的周长和面积
+        
+        ### 圆的周长
+        公式：C = πd 或 C = 2πr
+        
+        ### 圆的面积
+        公式：S = πr²
+        
+        ### 重要概念：
+        - π（圆周率）≈ 3.14
+        - d（直径）= 2r
+        - r（半径）= d ÷ 2
+        
+        ### 记忆口诀：
+        "圆的周长π乘d，或2πr要记清；
+         圆的面积πr²，半径平方要分明。"
+        """,
+        "例题": """
+        **例题**：一个圆的半径是5cm，求它的周长和面积。
+        
+        **解答**：
+        周长：C = 2 × 3.14 × 5 = 31.4（cm）
+        面积：S = 3.14 × 5² = 3.14 × 25 = 78.5（cm²）
+        """,
+        "练习题": ["直径10cm的圆周长是多少？", "半径3m的圆面积是多少？", "周长62.8cm的圆半径是多少？"]
+    },
+    "百分数的意义": {
+        "讲解": """
+        ## 百分数的意义
+        
+        百分数表示一个数是另一个数的百分之几，也叫百分率或百分比。
+        
+        ### 表示方法：
+        - 用"%"表示
+        - 如：25% 表示百分之二十五
+        
+        ### 百分数与分数、小数的互化：
+        1. 百分数化小数：去掉%，除以100
+        2. 小数化百分数：乘以100，加上%
+        3. 百分数化分数：写成分母是100的分数，再化简
+        
+        ### 实际应用：
+        - 折扣：八折 = 80%
+        - 合格率：合格产品占全部产品的百分之几
+        - 增长率：增长的部分占原来的百分之几
+        """,
+        "例题": """
+        **例题**：某商品原价200元，打八五折出售，现价多少元？
+        
+        **解答**：
+        200 × 85% = 200 × 0.85 = 170（元）
+        答：现价170元。
+        """,
+        "练习题": ["把0.75化成百分数", "把60%化成小数", "一件衣服打七折后210元，原价多少？"]
+    }
+}
+
+# ================== 练习题数据库 ==================
+PRACTICE_QUESTIONS = {
+    "分数": [
+        {"题目": "3/4 + 1/4 = ?", "选项": ["1", "4/4", "1/2", "2/4"], "答案": "1", "难度": "简单"},
+        {"题目": "2/3 × 3/5 = ?", "选项": ["2/5", "6/15", "1", "5/8"], "答案": "2/5", "难度": "中等"},
+        {"题目": "小明有3/5米绳子，用了1/4米，还剩多少米？", "选项": ["7/20", "1/2", "2/5", "3/10"], "答案": "7/20", "难度": "中等"}
+    ],
+    "小数": [
+        {"题目": "2.5 + 3.7 = ?", "选项": ["6.2", "5.2", "6.0", "5.8"], "答案": "6.2", "难度": "简单"},
+        {"题目": "4.8 × 0.5 = ?", "选项": ["2.4", "9.6", "0.24", "24"], "答案": "2.4", "难度": "简单"}
+    ],
+    "百分数": [
+        {"题目": "把0.65化成百分数", "选项": ["65%", "6.5%", "650%", "0.65%"], "答案": "65%", "难度": "简单"},
+        {"题目": "一件商品原价80元，打九折后多少钱？", "选项": ["72元", "64元", "88元", "90元"], "答案": "72元", "难度": "简单"}
+    ],
+    "图形": [
+        {"题目": "长方形的长8cm，宽5cm，面积是多少？", "选项": ["40cm²", "13cm²", "26cm²", "20cm²"], "答案": "40cm²", "难度": "简单"},
+        {"题目": "圆的半径3cm，周长约是多少？（π≈3.14）", "选项": ["18.84cm", "9.42cm", "28.26cm", "6.28cm"], "答案": "18.84cm", "难度": "中等"}
+    ]
+}
+
+# ================== 辅助函数 ==================
+def display_knowledge_tree(data: Dict, level: int = 0):
+    """递归显示知识树"""
+    for key, value in data.items():
+        if isinstance(value, dict):
+            with st.expander(f"{'📁' if level == 0 else '📘'} {key}"):
+                display_knowledge_tree(value, level + 1)
+        elif isinstance(value, list):
+            for item in value:
+                if st.button(f"🔹 {item}", key=f"btn_{item}"):
+                    st.session_state.selected_topic = item
+        else:
+            st.write(f"📝 {value}")
+
+def generate_practice_questions(topic: str, num: int = 3):
+    """生成练习题"""
+    questions = []
+    all_topics = list(PRACTICE_QUESTIONS.keys())
     
-    weak_nodes = []
-    for area in weak_areas:
-        weak_nodes.extend(weak_mapping.get(area, []))
+    if topic in PRACTICE_QUESTIONS:
+        pool = PRACTICE_QUESTIONS[topic]
+    else:
+        # 如果指定主题没有题目，从所有题目中随机选择
+        pool = []
+        for t in all_topics:
+            pool.extend(PRACTICE_QUESTIONS[t])
     
-    # 复习目标选择
-    st.sidebar.subheader("复习目标")
-    review_target = st.sidebar.selectbox(
-        "主要目标",
-        options=["期末考试冲刺", "薄弱环节突破", "知识体系构建", "小升初备考"],
-        index=0
+    if len(pool) > num:
+        questions = random.sample(pool, num)
+    else:
+        questions = pool
+    
+    return questions
+
+# ================== 初始化Session State ==================
+if 'selected_topic' not in st.session_state:
+    st.session_state.selected_topic = None
+if 'wrong_questions' not in st.session_state:
+    st.session_state.wrong_questions = []
+if 'practice_mode' not in st.session_state:
+    st.session_state.practice_mode = False
+
+# ================== 侧边栏 ==================
+with st.sidebar:
+    st.title("🧮 导航菜单")
+    
+    menu = st.radio(
+        "选择功能",
+        ["知识图谱", "知识点讲解", "智能练习", "错题本", "学习进度"]
     )
     
-    available_days = st.sidebar.slider("可用复习天数", 7, 90, 30)
+    st.markdown("---")
+    st.subheader("📊 学习统计")
+    st.metric("已掌握知识点", "12", "+3")
+    st.metric("练习正确率", "85%", "5%")
+    st.metric("学习时长", "8小时", "2小时")
     
-    # 主界面标签页
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "复习全景图", "个性化计划", "专题突破", "模拟测试", "学习报告"
-    ])
+    st.markdown("---")
+    st.caption("小学六年级数学总复习系统 v1.0")
+
+# ================== 主页面 ==================
+st.title("🧮 小学六年级数学总复习系统")
+st.markdown("### 构建知识体系，掌握数学核心概念")
+
+# 根据菜单选择显示不同内容
+if menu == "知识图谱":
+    st.header("🌳 知识图谱")
+    st.info("点击展开查看详细知识点结构")
     
-    with tab1:
-        st.header("六年级数学知识体系全景")
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        display_knowledge_tree(KNOWLEDGE_GRAPH)
+    
+    with col2:
+        st.subheader("📌 快速导航")
+        topics = ["分数运算", "百分数应用", "圆的面积", "长方体体积", "统计图"]
+        for topic in topics:
+            if st.button(topic, type="secondary"):
+                st.session_state.selected_topic = topic
+
+elif menu == "知识点讲解":
+    st.header("📚 知识点详细讲解")
+    
+    if st.session_state.selected_topic:
+        topic = st.session_state.selected_topic
+        st.success(f"当前学习：{topic}")
         
-        col1, col2 = st.columns([3, 1])
-        with col1:
-            if st.button("生成复习路线图", key="roadmap"):
-                roadmap_file = visualizer.create_review_roadmap()
-                st.components.v1.html(open(roadmap_file, 'r', encoding='utf-8').read(), height=950)
-        
-        with col2:
-            st.subheader("知识模块分布")
+        if topic in KNOWLEDGE_CONTENT:
+            content = KNOWLEDGE_CONTENT[topic]
             
-            # 统计各模块掌握情况
-            domains = {}
-            for node in kg.graph.nodes():
-                if kg.graph.nodes[node].get('is_review', False):
-                    domain = kg.graph.nodes[node]['domain']
-                    if domain not in domains:
-                        domains[domain] = {"total": 0, "mastered": 0}
-                    domains[domain]["total"] += 1
-                    if kg.graph.nodes[node].get('mastered', False):
-                        domains[domain]["mastered"] += 1
+            tabs = st.tabs(["详细讲解", "例题解析", "巩固练习"])
             
-            for domain, stats in domains.items():
-                progress = stats["mastered"] / stats["total"] if stats["total"] > 0 else 0
-                st.write(f"**{domain}**")
-                st.progress(progress)
-                st.caption(f"{stats['mastered']}/{stats['total']}个知识点")
-    
-    with tab2:
-        st.header("📝 个性化复习计划生成")
-        
-        # 学生档案
-        student_profile = {
-            "name": student_name,
-            "weaknesses": weak_nodes,
-            "target": review_target,
-            "available_days": available_days,
-            "days_until_exam": available_days
-        }
-        
-        # 策略选择
-        strategy = st.radio(
-            "选择复习策略",
-            options=["weakness_focused", "exam_preparation", "concept_integration"],
-            format_func=lambda x: {
-                "weakness_focused": "弱项突破",
-                "exam_preparation": "考试冲刺",
-                "concept_integration": "概念整合"
-            }[x],
-            horizontal=True
-        )
-        
-        if st.button("生成个性化复习计划", type="primary"):
-            with st.spinner("正在为您制定最优复习方案..."):
-                plan = recommender.generate_review_plan(student_profile, strategy)
+            with tabs[0]:
+                st.markdown(content["讲解"])
+            
+            with tabs[1]:
+                st.markdown(content["例题"])
+            
+            with tabs[2]:
+                st.write("**练习题：**")
+                for i, question in enumerate(content["练习题"], 1):
+                    st.write(f"{i}. {question}")
                 
-                st.success(f"✅ 已为{student_name}生成{available_days}天复习计划")
-                
-                # 显示计划概览
-                st.subheader("📅 复习计划概览")
-                
-                if strategy == "exam_preparation":
-                    for phase, details in plan["schedule"].items():
-                        with st.expander(f"**{phase}**"):
-                            st.write(f"**重点内容:** {', '.join(details['focus'])}")
-                            st.write(f"**练习类型:** {details['practice_type']}")
-                            
-                            # 显示每日计划
-                            st.write("**每日安排:**")
-                            for day, daily_plan in details["daily_plan"].items():
-                                st.write(f"- {day}: {', '.join(daily_plan['知识点名称'])}")
-                
-                elif strategy == "weakness_focused":
-                    for week, details in plan["schedule"].items():
-                        with st.expander(f"**{week}**"):
-                            st.write(f"**目标:** {details['目标']}")
-                            st.write(f"**知识点:** {', '.join(details['知识点'])}")
-                
-                # 下载计划
-                plan_json = json.dumps(plan, ensure_ascii=False, indent=2)
-                st.download_button(
-                    label="下载复习计划",
-                    data=plan_json,
-                    file_name=f"{student_name}_数学复习计划.json",
-                    mime="application/json"
-                )
-    
-    with tab3:
-        st.header("🎯 专题突破训练")
-        
-        # 选择专题
-        topic = st.selectbox(
-            "选择突破专题",
-            options=["分数百分数应用题", "行程问题综合", "几何应用", "统计与可能性"],
-            index=0
-        )
-        
-        topic_mapping = {
-            "分数百分数应用题": "CA1",
-            "行程问题综合": "CA2",
-            "几何应用": "CA3",
-            "统计与可能性": ["SP1", "SP2"]
-        }
-        
-        selected_topic = topic_mapping[topic]
-        
-        if isinstance(selected_topic, list):
-            central_node = selected_topic[0]
+                user_answer = st.text_area("写下你的解答：")
+                if st.button("提交答案"):
+                    if user_answer:
+                        st.success("已提交！正确答案稍后公布")
+                    else:
+                        st.warning("请先写下你的解答")
         else:
-            central_node = selected_topic
+            st.warning(f"知识点 '{topic}' 的详细内容正在建设中...")
+            st.info("你可以尝试选择其他知识点")
+    else:
+        st.info("请从知识图谱中选择一个知识点开始学习")
         
-        # 显示专题知识结构
-        st.subheader("专题知识结构")
+        # 显示热门知识点
+        st.subheader("🔥 热门知识点")
+        cols = st.columns(3)
+        hot_topics = ["分数的意义", "圆的周长和面积", "百分数的意义"]
         
-        if st.button("生成思维导图"):
-            mindmap_file = visualizer.create_concept_mindmap(central_node)
-            st.components.v1.html(open(mindmap_file, 'r', encoding='utf-8').read(), height=850)
-        
-        # 专题练习
-        st.subheader("专题练习建议")
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.info("**基础巩固**")
-            st.write("""
-            1. 概念辨析题（10道）
-            2. 基本计算题（15道）
-            3. 公式应用题（8道）
-            """)
-        
-        with col2:
-            st.warning("**能力提升**")
-            st.write("""
-            1. 综合应用题（6道）
-            2. 变式训练题（5道）
-            3. 易错题专练（8道）
-            """)
-        
-        with col3:
-            st.success("**拓展延伸**")
-            st.write("""
-            1. 生活实际问题（3道）
-            2. 跨学科综合题（2道）
-            3. 探究性题目（1道）
-            """)
+        for i, topic in enumerate(hot_topics):
+            with cols[i]:
+                if st.button(f"学习 {topic}"):
+                    st.session_state.selected_topic = topic
+                    st.rerun()
+
+elif menu == "智能练习":
+    st.header("💪 智能练习")
     
-    with tab4:
-        st.header("📝 智能模拟测试")
-        
-        test_type = st.selectbox(
-            "测试类型",
-            ["单元测试", "专题测试", "综合模拟", "小升初真题"]
+    col1, col2 = st.columns([1, 2])
+    
+    with col1:
+        st.subheader("练习设置")
+        topic = st.selectbox(
+            "选择练习主题",
+            ["分数", "小数", "百分数", "图形", "混合练习"]
         )
+        difficulty = st.select_slider(
+            "难度",
+            options=["简单", "中等", "困难"]
+        )
+        question_num = st.slider("题目数量", 1, 10, 5)
         
-        # 生成测试卷
-        if st.button("生成模拟试卷"):
-            with st.spinner("正在组卷中..."):
-                test_paper = generate_test_paper(test_type, weak_nodes)
-                
-                st.subheader(f"{test_type}试卷")
-                
-                for i, question in enumerate(test_paper["questions"], 1):
-                    with st.expander(f"第{i}题: {question['type']} ({question['score']}分)"):
-                        st.write(f"**题目:** {question['content']}")
-                        
-                        if question['type'] == '选择题':
-                            for option in question['options']:
-                                st.write(f"- {option}")
-                        
-                        # 答题区
-                        if question['type'] == '选择题':
-                            answer = st.radio("请选择:", question['options'], key=f"q{i}")
-                        else:
-                            answer = st.text_area("请作答:", key=f"q{i}")
-                
-                if st.button("提交试卷"):
-                    st.success("试卷提交成功！系统将自动批改并生成分析报告")
+        if st.button("生成练习", type="primary"):
+            st.session_state.practice_mode = True
+            st.session_state.current_questions = generate_practice_questions(topic, question_num)
+            st.session_state.current_answers = [None] * len(st.session_state.current_questions)
+            st.session_state.show_answers = False
     
-    with tab5:
-        st.header("📊 学习报告与分析")
+    with col2:
+        if st.session_state.practice_mode and 'current_questions' in st.session_state:
+            st.subheader("📝 练习题")
+            
+            questions = st.session_state.current_questions
+            
+            for i, q in enumerate(questions):
+                st.markdown(f"**第{i+1}题：** {q['题目']}")
+                
+                # 选择题显示选项
+                if '选项' in q:
+                    selected = st.radio(
+                        f"选择答案：",
+                        q['选项'],
+                        key=f"q_{i}"
+                    )
+                    st.session_state.current_answers[i] = selected
+                else:
+                    # 填空题
+                    answer = st.text_input(f"请输入答案：", key=f"q_{i}")
+                    st.session_state.current_answers[i] = answer
+                
+                st.markdown("---")
+            
+            col_btn1, col_btn2 = st.columns(2)
+            with col_btn1:
+                if st.button("提交答案", type="primary"):
+                    correct_count = 0
+                    for i, q in enumerate(questions):
+                        if st.session_state.current_answers[i] == q['答案']:
+                            correct_count += 1
+                        else:
+                            # 添加到错题本
+                            st.session_state.wrong_questions.append({
+                                "题目": q['题目'],
+                                "你的答案": st.session_state.current_answers[i],
+                                "正确答案": q['答案']
+                            })
+                    
+                    st.success(f"答对了 {correct_count}/{len(questions)} 题")
+                    st.session_state.show_answers = True
+            
+            with col_btn2:
+                if st.button("重新练习"):
+                    st.session_state.practice_mode = False
+                    st.rerun()
+            
+            # 显示答案
+            if st.session_state.get('show_answers', False):
+                st.subheader("📋 正确答案")
+                for i, q in enumerate(questions):
+                    st.write(f"第{i+1}题：{q['题目']}")
+                    st.write(f"正确答案：**{q['答案']}**")
+                    st.write(f"你的答案：{st.session_state.current_answers[i]}")
+                    if st.session_state.current_answers[i] == q['答案']:
+                        st.success("✓ 正确")
+                    else:
+                        st.error("✗ 错误")
+                    st.markdown("---")
+        else:
+            st.info("请先设置练习参数并点击'生成练习'按钮")
+
+elif menu == "错题本":
+    st.header("📖 错题本")
+    
+    if st.session_state.wrong_questions:
+        st.warning(f"你有 {len(st.session_state.wrong_questions)} 道错题需要复习")
         
-        # 模拟学习数据
+        for i, item in enumerate(st.session_state.wrong_questions):
+            with st.expander(f"错题 {i+1}"):
+                st.write(f"**题目：** {item['题目']}")
+                st.write(f"**你的答案：** {item['你的答案']}")
+                st.write(f"**正确答案：** {item['正确答案']}")
+                
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button("标记为已掌握", key=f"master_{i}"):
+                        st.session_state.wrong_questions.pop(i)
+                        st.success("已从错题本移除")
+                        st.rerun()
+                with col2:
+                    if st.button("再做一遍", key=f"redo_{i}"):
+                        st.info("重新练习这道题...")
+        
+        if st.button("清空错题本", type="secondary"):
+            st.session_state.wrong_questions = []
+            st.success("错题本已清空")
+            st.rerun()
+    else:
+        st.success("🎉 太棒了！错题本为空")
+        st.info("继续保持，认真学习每一道题")
+
+elif menu == "学习进度":
+    st.header("📈 学习进度")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.subheader("知识点掌握情况")
+        # 模拟进度数据
         progress_data = {
-            "日期": ["2024-01-01", "2024-01-08", "2024-01-15", "2024-01-22", "2024-01-29"],
-            "知识点掌握数": [5, 12, 18, 24, 30],
-            "正确率": [0.65, 0.72, 0.78, 0.82, 0.85],
-            "学习时长(分钟)": [45, 50, 55, 60, 60]
+            "数与代数": 75,
+            "图形与几何": 60,
+            "统计与概率": 85,
+            "解决问题": 50
         }
         
-        df = pd.DataFrame(progress_data)
+        for topic, percent in progress_data.items():
+            st.write(f"**{topic}**")
+            st.progress(percent / 100)
+            st.write(f"{percent}% 掌握")
+            st.markdown("---")
+    
+    with col2:
+        st.subheader("学习统计")
         
-        col1, col2 = st.columns(2)
+        # 模拟周学习数据
+        import plotly.graph_objects as go
         
-        with col1:
-            st.subheader("学习进步趋势")
-            st.line_chart(df.set_index("日期")["正确率"])
+        days = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
+        study_time = [30, 45, 60, 25, 50, 90, 40]  # 分钟
         
-        with col2:
-            st.subheader("知识点掌握情况")
-            st.bar_chart(df.set_index("日期")["知识点掌握数"])
-        
-        # 能力雷达图
-        st.subheader("数学能力雷达图")
-        
-        abilities = {
-            "计算能力": 0.82,
-            "空间想象": 0.75,
-            "逻辑推理": 0.78,
-            "问题解决": 0.70,
-            "数据分析": 0.80
-        }
-        
-        # 使用plotly创建雷达图
-        fig = go.Figure(data=go.Scatterpolar(
-            r=list(abilities.values()),
-            theta=list(abilities.keys()),
-            fill='toself'
-        ))
+        fig = go.Figure(data=[
+            go.Bar(x=days, y=study_time, marker_color='lightblue')
+        ])
         
         fig.update_layout(
-            polar=dict(
-                radialaxis=dict(
-                    visible=True,
-                    range=[0, 1]
-                )),
-            showlegend=False
+            title="本周学习时长（分钟）",
+            xaxis_title="日期",
+            yaxis_title="学习时长（分钟）",
+            height=300
         )
         
         st.plotly_chart(fig, use_container_width=True)
         
-        # 学习建议
-        st.subheader("个性化学习建议")
+        st.markdown("### 🏆 学习成就")
+        achievements = [
+            "连续学习3天 ✓",
+            "完成20道练习题 ✓",
+            "掌握分数运算 ✓",
+            "图形与几何学习中...",
+            "挑战难题 ×"
+        ]
         
+<<<<<<< Updated upstream
         suggestions = {
             "优势保持": ["计算能力较强，保持每日计算练习"],
             "重点突破": [
@@ -327,3 +547,26 @@ def main():
                 for item in items:
                     st.write(f"• {item}")
     if __name__ == "__main__": main()
+=======
+        for ach in achievements:
+            st.write(f"- {ach}")
+
+# ================== 页脚 ==================
+st.markdown("---")
+st.markdown("""
+<div style='text-align: center'>
+    <p>小学六年级数学总复习系统 • 帮助同学们系统复习数学知识</p>
+    <p>遇到问题？点击右上角"?"获取帮助</p>
+</div>
+""", unsafe_allow_html=True)
+
+# ================== 部署说明（不会被显示） ==================
+"""
+部署说明：
+1. 这个应用包含了完整的六年级数学复习功能
+2. 依赖包已在requirements.txt中
+3. 应用已配置为宽屏模式，适配各种设备
+4. 使用了session_state来保持用户状态
+"""
+
+>>>>>>> Stashed changes
