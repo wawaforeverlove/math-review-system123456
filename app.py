@@ -9,7 +9,7 @@ st.set_page_config(
     page_title="小学六年级数学总复习系统",
     page_icon="📚",
     layout="wide",
-    initial_sidebar_state="expanded"ss
+    initial_sidebar_state="expanded",
 )
 
 # ========== 2. 导入项目模块 ==========
