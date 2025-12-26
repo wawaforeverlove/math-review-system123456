@@ -1,4 +1,9 @@
-# grade_six_visualizer.py
+"""六年级知识图谱可视化器"""
+import streamlit as st
+import math
+from pyvis.network import Network
+from knowledge_visualizer_base import KnowledgeVisualizer
+
 class GradeSixVisualizer(KnowledgeVisualizer):
     def __init__(self, graph):
         super().__init__(graph)
@@ -11,132 +16,127 @@ class GradeSixVisualizer(KnowledgeVisualizer):
     
     def create_review_roadmap(self, output_path="review_roadmap.html"):
         """创建六年级复习路线图"""
-        net = Network(height="900px", width="100%", directed=True, layout=True)
-        
-        # 按复习阶段分组
-        phases = {
-            "第一阶段：数与代数系统复习": ["NA1", "NA2", "NA3", "NA4"],
-            "第二阶段：图形几何深化": ["GG1", "GG2", "GG3"],
-            "第三阶段：综合能力提升": ["CA1", "CA2", "CA3", "SP1", "SP2"]
-        }
-        
-        y_offset = 0
-        for phase_name, nodes in phases.items():
-            # 添加阶段标题节点
-            net.add_node(
-                f"phase_{phase_name}",
-                label=phase_name,
-                color="#F39C12",
-                shape="box",
-                size=30,
-                x=0,
-                y=y_offset,
-                physics=False
-            )
+        try:
+            net = Network(height="900px", width="100%", directed=True, layout=True)
             
-            # 添加该阶段知识点
-            x_offset = -200
-            for i, node_id in enumerate(nodes):
-                node_data = self.graph.nodes[node_id]
+            # 按复习阶段分组
+            phases = {
+                "第一阶段：数与代数系统复习": ["NA1", "NA2", "NA3", "NA4"],
+                "第二阶段：图形几何深化": ["GG1", "GG2", "GG3"],
+                "第三阶段：综合能力提升": ["CA1", "CA2", "CA3", "SP1", "SP2"]
+            }
+            
+            y_offset = 0
+            for phase_name, nodes in phases.items():
+                # 添加阶段标题节点
                 net.add_node(
-                    node_id,
-                    label=f"{node_id}\n{node_data['name']}",
-                    color=self.review_colors.get(node_data['domain'], "#95A5A6"),
-                    shape="dot" if not node_data.get('mastered', False) else "star",
-                    size=15 + node_data['level'] * 3,
-                    x=x_offset + (i % 3) * 200,
-                    y=y_offset - 100 - (i // 3) * 150,
-                    physics=True,
-                    title=self._create_node_tooltip(node_data)
+                    f"phase_{phase_name}",
+                    label=phase_name,
+                    color="#F39C12",
+                    shape="box",
+                    size=30,
+                    x=0,
+                    y=y_offset,
+                    physics=False
                 )
                 
-                # 连接到阶段标题
-                net.add_edge(f"phase_{phase_name}", node_id, dashes=True, width=1)
+                # 添加该阶段知识点
+                x_offset = -200
+                for i, node_id in enumerate(nodes):
+                    if node_id not in self.graph:
+                        st.warning(f"节点 {node_id} 在图中不存在")
+                        continue
+                        
+                    node_data = self.graph.nodes[node_id]
+                    net.add_node(
+                        node_id,
+                        label=f"{node_id}\n{node_data['name']}",
+                        color=self.review_colors.get(node_data.get('domain', ''), "#95A5A6"),
+                        shape="dot" if not node_data.get('mastered', False) else "star",
+                        size=15 + node_data.get('level', 1) * 3,
+                        x=x_offset + (i % 3) * 200,
+                        y=y_offset - 100 - (i // 3) * 150,
+                        physics=True,
+                        title=self._create_node_tooltip(node_data)
+                    )
+                    
+                    # 连接到阶段标题
+                    net.add_edge(f"phase_{phase_name}", node_id, dashes=True, width=1)
+                
+                y_offset -= 400
             
-            y_offset -= 400
-        
-        # 添加阶段间的连接
-        net.add_edge("phase_第一阶段：数与代数系统复习", "phase_第二阶段：图形几何深化", 
-                    label="为图形计算提供基础", width=2)
-        net.add_edge("phase_第二阶段：图形几何深化", "phase_第三阶段：综合能力提升",
-                    label="综合运用", width=2)
-        
-        net.show(output_path)
-        return output_path
+            # 添加阶段间的连接
+            net.add_edge("phase_第一阶段：数与代数系统复习", "phase_第二阶段：图形几何深化", 
+                        label="为图形计算提供基础", width=2)
+            net.add_edge("phase_第二阶段：图形几何深化", "phase_第三阶段：综合能力提升",
+                        label="综合运用", width=2)
+            
+            net.save_graph(output_path)
+            st.success(f"路线图已保存到 {output_path}")
+            return output_path
+            
+        except Exception as e:
+            st.error(f"创建路线图失败: {e}")
+            return None
     
     def create_concept_mindmap(self, central_concept, output_path="concept_mindmap.html"):
         """创建概念思维导图"""
-        net = Network(height="800px", width="100%", layout=True)
-        
-        # 中心概念
-        net.add_node(
-            central_concept,
-            label=f"{central_concept}\n{self.graph.nodes[central_concept]['name']}",
-            color="#E74C3C",
-            size=50,
-            shape="circle"
-        )
-        
-        # 相关概念（前驱）
-        prerequisites = list(self.graph.predecessors(central_concept))
-        for i, prereq in enumerate(prerequisites):
-            angle = 2 * math.pi * i / len(prerequisites)
-            x = 300 * math.cos(angle)
-            y = 300 * math.sin(angle)
+        try:
+            if central_concept not in self.graph:
+                st.error(f"中心概念 {central_concept} 不存在")
+                return None
+                
+            net = Network(height="800px", width="100%", layout=True)
             
+            # 中心概念
             net.add_node(
-                prereq,
-                label=f"{prereq}\n{self.graph.nodes[prereq]['name']}",
-                color="#3498DB",
-                size=35,
-                x=x,
-                y=y,
-                physics=True
+                central_concept,
+                label=f"{central_concept}\n{self.graph.nodes[central_concept]['name']}",
+                color="#E74C3C",
+                size=50,
+                shape="circle"
             )
-            net.add_edge(prereq, central_concept, label="先修知识")
-        
-        # 应用场景（后继）
-        applications = list(self.graph.successors(central_concept))
-        for i, app in enumerate(applications):
-            angle = math.pi + 2 * math.pi * i / len(applications)
-            x = 200 * math.cos(angle)
-            y = 200 * math.sin(angle)
             
-            net.add_node(
-                app,
-                label=f"{app}\n{self.graph.nodes[app]['name']}",
-                color="#2ECC71",
-                size=30,
-                x=x,
-                y=y,
-                physics=True
-            )
-            net.add_edge(central_concept, app, label="应用", color="#27AE60")
-        
-        # 相似概念
-        similar_concepts = []
-        for edge in self.graph.edges(central_concept, data=True):
-            if edge[2].get('relation') == 'concept_transfer':
-                if edge[0] == central_concept:
-                    similar_concepts.append(edge[1])
-                else:
-                    similar_concepts.append(edge[0])
-        
-        for i, similar in enumerate(similar_concepts):
-            angle = math.pi/2 + 2 * math.pi * i / len(similar_concepts)
-            x = 400 * math.cos(angle)
-            y = 400 * math.sin(angle)
+            # 相关概念（前驱）
+            prerequisites = list(self.graph.predecessors(central_concept))
+            for i, prereq in enumerate(prerequisites):
+                angle = 2 * math.pi * i / len(prerequisites) if prerequisites else 0
+                x = 300 * math.cos(angle)
+                y = 300 * math.sin(angle)
+                
+                net.add_node(
+                    prereq,
+                    label=f"{prereq}\n{self.graph.nodes[prereq]['name']}",
+                    color="#3498DB",
+                    size=35,
+                    x=x,
+                    y=y,
+                    physics=True
+                )
+                net.add_edge(prereq, central_concept, label="先修知识")
             
-            net.add_node(
-                similar,
-                label=f"{similar}\n{self.graph.nodes[similar]['name']}",
-                color="#9B59B6",
-                size=30,
-                x=x,
-                y=y,
-                physics=True
-            )
-            net.add_edge(central_concept, similar, label="知识迁移", dashes=True, color="#8E44AD")
-        
-        net.show(output_path)
-        return output_path
+            # 应用场景（后继）
+            applications = list(self.graph.successors(central_concept))
+            for i, app in enumerate(applications):
+                angle = math.pi + 2 * math.pi * i / len(applications) if applications else 0
+                x = 200 * math.cos(angle)
+                y = 200 * math.sin(angle)
+                
+                net.add_node(
+                    app,
+                    label=f"{app}\n{self.graph.nodes[app]['name']}",
+                    color="#2ECC71",
+                    size=30,
+                    x=x,
+                    y=y,
+                    physics=True
+                )
+                net.add_edge(central_concept, app, label="应用", color="#27AE60")
+            
+            net.save_graph(output_path)
+            st.success(f"思维导图已保存到 {output_path}")
+            return output_path
+            
+        except Exception as e:
+            st.error(f"创建思维导图失败: {e}")
+            return None

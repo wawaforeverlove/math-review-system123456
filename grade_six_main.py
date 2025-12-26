@@ -1,16 +1,55 @@
-# grade_six_main.py
+"""六年级主界面"""
 import streamlit as st
+import json
+import pandas as pd
+import plotly.graph_objects as go
+
+# 导入其他模块
+from knowledge_graph import GradeSixReviewGraph
+from grade_six_visualizer import GradeSixVisualizer
+from review_path_recommender import GradeSixReviewRecommender
+
+def generate_test_paper(test_type, weak_nodes):
+    """生成测试试卷（简化版）"""
+    questions = []
+    
+    if test_type == "单元测试":
+        questions = [
+            {
+                "type": "选择题",
+                "content": "下列哪个数是质数？",
+                "options": ["4", "6", "7", "9"],
+                "score": 5
+            }
+        ]
+    else:
+        questions = [
+            {
+                "type": "应用题",
+                "content": "小明有若干苹果，分给同学们后还剩3个，请问原来有多少苹果？",
+                "score": 10
+            }
+        ]
+    
+    return {
+        "test_type": test_type,
+        "total_score": sum(q["score"] for q in questions),
+        "questions": questions
+    }
+
 def main():
-    st.set_page_config(page_title="小学六年级数学总复习系统", layout="wide")
     st.title("🎓 小学六年级数学总复习智能系统")
     
     # 初始化六年级专项图谱
     with st.spinner("加载六年级复习知识体系..."):
-        kg = GradeSixReviewGraph()
-        kg.build_graph()
-        kg.build_review_graph()
-        visualizer = GradeSixVisualizer(kg.graph)
-        recommender = GradeSixReviewRecommender(kg.graph)
+        try:
+            kg = GradeSixReviewGraph()
+            visualizer = GradeSixVisualizer(kg.graph)
+            recommender = GradeSixReviewRecommender(kg.graph)
+            st.success("✅ 系统初始化成功！")
+        except Exception as e:
+            st.error(f"❌ 系统初始化失败: {e}")
+            return
     
     # 学生信息收集
     st.sidebar.header("📋 学生信息")
@@ -63,7 +102,10 @@ def main():
         with col1:
             if st.button("生成复习路线图", key="roadmap"):
                 roadmap_file = visualizer.create_review_roadmap()
-                st.components.v1.html(open(roadmap_file, 'r', encoding='utf-8').read(), height=950)
+                if roadmap_file:
+                    with open(roadmap_file, 'r', encoding='utf-8') as f:
+                        html_content = f.read()
+                    st.components.v1.html(html_content, height=950, scrolling=True)
         
         with col2:
             st.subheader("知识模块分布")
@@ -72,7 +114,7 @@ def main():
             domains = {}
             for node in kg.graph.nodes():
                 if kg.graph.nodes[node].get('is_review', False):
-                    domain = kg.graph.nodes[node]['domain']
+                    domain = kg.graph.nodes[node].get('domain', '未知')
                     if domain not in domains:
                         domains[domain] = {"total": 0, "mastered": 0}
                     domains[domain]["total"] += 1
@@ -111,38 +153,42 @@ def main():
         
         if st.button("生成个性化复习计划", type="primary"):
             with st.spinner("正在为您制定最优复习方案..."):
-                plan = recommender.generate_review_plan(student_profile, strategy)
-                
-                st.success(f"✅ 已为{student_name}生成{available_days}天复习计划")
-                
-                # 显示计划概览
-                st.subheader("📅 复习计划概览")
-                
-                if strategy == "exam_preparation":
-                    for phase, details in plan["schedule"].items():
-                        with st.expander(f"**{phase}**"):
-                            st.write(f"**重点内容:** {', '.join(details['focus'])}")
-                            st.write(f"**练习类型:** {details['practice_type']}")
-                            
-                            # 显示每日计划
-                            st.write("**每日安排:**")
-                            for day, daily_plan in details["daily_plan"].items():
-                                st.write(f"- {day}: {', '.join(daily_plan['知识点名称'])}")
-                
-                elif strategy == "weakness_focused":
-                    for week, details in plan["schedule"].items():
-                        with st.expander(f"**{week}**"):
-                            st.write(f"**目标:** {details['目标']}")
-                            st.write(f"**知识点:** {', '.join(details['知识点'])}")
-                
-                # 下载计划
-                plan_json = json.dumps(plan, ensure_ascii=False, indent=2)
-                st.download_button(
-                    label="下载复习计划",
-                    data=plan_json,
-                    file_name=f"{student_name}_数学复习计划.json",
-                    mime="application/json"
-                )
+                try:
+                    plan = recommender.generate_review_plan(student_profile, strategy)
+                    
+                    st.success(f"✅ 已为{student_name}生成{available_days}天复习计划")
+                    
+                    # 显示计划概览
+                    st.subheader("📅 复习计划概览")
+                    
+                    if strategy == "exam_preparation":
+                        for phase, details in plan["schedule"].items():
+                            with st.expander(f"**{phase}**"):
+                                st.write(f"**重点内容:** {', '.join(details['focus'])}")
+                                st.write(f"**练习类型:** {details['practice_type']}")
+                                
+                                # 显示每日计划
+                                st.write("**每日安排:**")
+                                for day, daily_plan in details["daily_plan"].items():
+                                    st.write(f"- {day}: {', '.join(daily_plan['知识点名称'])}")
+                    
+                    elif strategy == "weakness_focused":
+                        for week, details in plan["schedule"].items():
+                            with st.expander(f"**{week}**"):
+                                st.write(f"**目标:** {details['目标']}")
+                                st.write(f"**知识点:** {', '.join(details['知识点'])}")
+                    
+                    # 下载计划
+                    plan_json = json.dumps(plan, ensure_ascii=False, indent=2)
+                    st.download_button(
+                        label="下载复习计划",
+                        data=plan_json,
+                        file_name=f"{student_name}_数学复习计划.json",
+                        mime="application/json"
+                    )
+                    
+                except Exception as e:
+                    st.error(f"生成计划失败: {e}")
     
     with tab3:
         st.header("🎯 专题突破训练")
@@ -158,22 +204,20 @@ def main():
             "分数百分数应用题": "CA1",
             "行程问题综合": "CA2",
             "几何应用": "CA3",
-            "统计与可能性": ["SP1", "SP2"]
+            "统计与可能性": "SP1"
         }
         
         selected_topic = topic_mapping[topic]
-        
-        if isinstance(selected_topic, list):
-            central_node = selected_topic[0]
-        else:
-            central_node = selected_topic
         
         # 显示专题知识结构
         st.subheader("专题知识结构")
         
         if st.button("生成思维导图"):
-            mindmap_file = visualizer.create_concept_mindmap(central_node)
-            st.components.v1.html(open(mindmap_file, 'r', encoding='utf-8').read(), height=850)
+            mindmap_file = visualizer.create_concept_mindmap(selected_topic)
+            if mindmap_file:
+                with open(mindmap_file, 'r', encoding='utf-8') as f:
+                    html_content = f.read()
+                st.components.v1.html(html_content, height=850, scrolling=True)
         
         # 专题练习
         st.subheader("专题练习建议")
@@ -306,3 +350,6 @@ def main():
             with st.expander(f"**{category}**"):
                 for item in items:
                     st.write(f"• {item}")
+
+if __name__ == "__main__":
+    main()

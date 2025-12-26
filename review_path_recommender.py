@@ -1,4 +1,10 @@
-# review_path_recommender.py
+"""六年级复习路径推荐器"""
+import streamlit as st
+import networkx as nx
+import json
+from typing import Dict, List, Optional
+from learning_path_recommender_base import LearningPathRecommender
+
 class GradeSixReviewRecommender(LearningPathRecommender):
     def __init__(self, graph):
         super().__init__(graph)
@@ -11,10 +17,6 @@ class GradeSixReviewRecommender(LearningPathRecommender):
     def generate_review_plan(self, student_profile: Dict, strategy: str = "exam_preparation") -> Dict:
         """
         生成个性化复习计划
-        
-        Args:
-            student_profile: 包含学生弱点和目标的信息
-            strategy: 复习策略类型
         """
         if strategy not in self.review_strategies:
             raise ValueError(f"不支持的复习策略: {strategy}")
@@ -40,7 +42,7 @@ class GradeSixReviewRecommender(LearningPathRecommender):
             "total_days": target_days,
             "weaknesses": weaknesses,
             "schedule": review_schedule,
-            "assessment_points": self._set_assessment_points(review_schedule)
+            "assessment_points": [7, 14, 21, 28]  # 评估时间点
         }
     
     def _exam_preparation_path(self, profile: Dict) -> Dict:
@@ -92,61 +94,57 @@ class GradeSixReviewRecommender(LearningPathRecommender):
         
         integration_path = []
         for cluster_name, nodes in concept_clusters.items():
-            # 在每个簇内建立学习路径
             cluster_path = []
             for node in nodes:
-                prereq_tree = self.get_prerequisite_tree(node)
-                cluster_path.append({
-                    "concept": node,
-                    "name": self.graph.nodes[node]["name"],
-                    "prerequisite_count": len(self._flatten_prereq_tree(prereq_tree))
-                })
+                if node in self.graph:
+                    prereq_tree = self.get_prerequisite_tree(node)
+                    cluster_path.append({
+                        "concept": node,
+                        "name": self.graph.nodes[node]["name"],
+                        "prerequisite_count": len(self._flatten_prereq_tree(prereq_tree))
+                    })
             
             # 按先修关系排序
             cluster_path.sort(key=lambda x: x["prerequisite_count"])
             
             integration_path.append({
                 "cluster": cluster_name,
-                "description": self._get_cluster_description(cluster_name),
+                "description": f"{cluster_name}知识簇",
                 "learning_path": cluster_path,
-                "integration_activities": self._get_integration_activities(cluster_name)
+                "integration_activities": ["专题练习", "跨领域应用题"]
             })
         
         return {
             "strategy": "概念整合",
             "concept_clusters": integration_path,
-            "integration_projects": self._design_integration_projects()
+            "integration_projects": ["生活数学项目", "数学建模小任务"]
         }
     
     def _organize_by_week(self, foundation_nodes, weak_nodes, total_days):
         """按周组织复习计划"""
-        weeks = total_days // 7
+        weeks = total_days // 7 if total_days >= 7 else 1
         schedule = {}
         
         # 第一周：基础巩固
+        foundation_list = list(foundation_nodes)
         schedule["第1周：基础巩固"] = {
             "目标": "夯实弱项知识点的基础",
-            "知识点": list(foundation_nodes)[:5],  # 取最重要的5个基础点
-            "每日安排": self._distribute_to_days(list(foundation_nodes)[:5], 7),
+            "知识点": foundation_list[:min(5, len(foundation_list))],  # 取最重要的5个基础点
+            "每日安排": self._distribute_to_days(foundation_list[:min(5, len(foundation_list))], min(7, total_days)),
             "配套练习": "基础题+概念判断题"
         }
         
         # 中间周：弱项突破
-        for week in range(2, weeks):
-            schedule[f"第{week}周：专项突破"] = {
-                "目标": f"集中攻克第{week-1}个弱项",
-                "知识点": weak_nodes[week-2:week] if week-2 < len(weak_nodes) else [],
-                "每日安排": self._distribute_to_days(weak_nodes[week-2:week], 7),
-                "配套练习": "专项训练题+易错题"
-            }
-        
-        # 最后一周：综合应用
-        schedule[f"第{weeks}周：综合应用"] = {
-            "目标": "综合运用所学知识解决问题",
-            "知识点": weak_nodes + list(foundation_nodes)[-3:],
-            "每日安排": self._distribute_to_days(weak_nodes, 7),
-            "配套练习": "综合应用题+模拟题"
-        }
+        for week in range(2, weeks + 1):
+            week_key = f"第{week}周：专项突破"
+            if week-2 < len(weak_nodes):
+                weak_topic = [weak_nodes[week-2]] if week-2 < len(weak_nodes) else []
+                schedule[week_key] = {
+                    "目标": f"集中攻克第{week-1}个弱项",
+                    "知识点": weak_topic,
+                    "每日安排": self._distribute_to_days(weak_topic, 7),
+                    "配套练习": "专项训练题+易错题"
+                }
         
         return schedule
     
@@ -160,9 +158,15 @@ class GradeSixReviewRecommender(LearningPathRecommender):
             end_idx = min(start_idx + topics_per_day, len(topics))
             daily_topics = topics[start_idx:end_idx]
             
+            # 获取知识点名称
+            topic_names = []
+            for t in daily_topics:
+                if t in self.graph:
+                    topic_names.append(self.graph.nodes[t].get("name", t))
+            
             daily_plans[f"第{day}天"] = {
                 "复习内容": daily_topics,
-                "知识点名称": [self.graph.nodes[t]["name"] for t in daily_topics],
+                "知识点名称": topic_names,
                 "学习时长": "60-90分钟",
                 "练习建议": {
                     "基础巩固": f"{len(daily_topics)*5}道基础题",
@@ -172,3 +176,18 @@ class GradeSixReviewRecommender(LearningPathRecommender):
             }
         
         return daily_plans
+    
+    def _distribute_to_days(self, topics, days):
+        """将知识点分配到每天"""
+        if not topics:
+            return {}
+        
+        daily_dist = {}
+        topics_per_day = max(1, len(topics) // days)
+        
+        for day in range(1, min(days, len(topics)) + 1):
+            start_idx = (day - 1) * topics_per_day
+            end_idx = min(start_idx + topics_per_day, len(topics))
+            daily_dist[f"第{day}天"] = topics[start_idx:end_idx]
+        
+        return daily_dist
