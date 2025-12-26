@@ -1,4 +1,5 @@
 # grade_six_main.py
+import streamlit as st
 def main():
     st.set_page_config(page_title="小学六年级数学总复习系统", layout="wide")
     st.title("🎓 小学六年级数学总复习智能系统")
